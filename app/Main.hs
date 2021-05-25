@@ -1,6 +1,6 @@
 module Main where
 
-import Lib (eval)
+import Lib (run)
 
 repl :: IO ()
 repl = do
@@ -9,7 +9,7 @@ repl = do
   if input == "exit"
     then return ()
     else do
-      putStrLn . eval $ input
+      putStrLn . run $ input
       repl
 
 main :: IO ()

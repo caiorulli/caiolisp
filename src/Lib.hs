@@ -1,5 +1,5 @@
 module Lib
-    ( eval
+    ( run
     ) where
 
 import Data.Char
@@ -7,34 +7,40 @@ import Data.Char
 someFunc :: IO ()
 someFunc = putStrLn "someFunc"
 
-data AtomicExpr = Number Int | Symbol String
+data LexicalValue = Number Int | Variable String deriving (Eq, Show)
+data Token = Open | Close | Element LexicalValue deriving (Eq, Show)
 
-instance Show AtomicExpr where
-  show (Number n) = show n
-  show (Symbol s) = '\'':s
+lexer :: String -> LexicalValue
+lexer s
+  | all isNumber s = Number . read $ s
+  | otherwise      = Variable s
 
-data Expression = Atomic AtomicExpr | Expression [Expression]
-  deriving (Show)
+openOrClose :: Char -> Bool
+openOrClose '(' = True
+openOrClose ')' = True
+openOrClose _   = False
 
-analyze :: String -> Expression
-analyze ('(':substr) = Expression . map analyze . words . takeWhile (/=')') $
-  substr
-analyze s
-  | all isNumber s = Atomic . Number . read $ s
-  | otherwise      = Atomic . Symbol $ s
-          
-eval :: String -> String
-eval = show . evalExpression . analyze
+tokenizeWord :: String -> [Token]
+tokenizeWord [] = []
+tokenizeWord s@(c:cs)
+  | c == '('  = Open : tokenizeWord cs
+  | c == ')'  = Close : tokenizeWord cs
+  | otherwise = let (element, rest) = break openOrClose s
+                in  Element (lexer element) : tokenizeWord rest
 
-evalExpression :: Expression -> AtomicExpr
-evalExpression (Expression (operator:operands)) =
-  apply (evalExpression operator) (map evalExpression operands)
-evalExpression (Atomic expr) = expr
+tokenize :: String -> [Token]
+tokenize input =
+  let inputWords = words input
+  in concatMap tokenizeWord inputWords
 
-atomicExprToInt :: AtomicExpr -> Int
-atomicExprToInt (Number i) = i
-atomicExprToInt (Symbol _) = 0
+data Sexpr = Atom LexicalValue | Node [Sexpr] deriving (Show)
 
-apply :: AtomicExpr -> [AtomicExpr] -> AtomicExpr
-apply (Symbol "+") exprs = Number . sum . map atomicExprToInt $ exprs
-apply _ _ = Number 2
+parse :: [Token] -> [Sexpr]
+parse [] = []
+parse ((Element lexVal):ts) = Atom lexVal : parse ts
+parse (Open:ts) = let (sexpr, rest) = break (== Close) ts
+                  in Node (parse sexpr) : parse rest
+parse (Close:ts) = parse ts
+  
+run :: String -> String
+run = show . parse . tokenize
