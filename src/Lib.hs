@@ -4,17 +4,18 @@ module Lib
 where
 
 import Data.Char
+import qualified Data.Map as M
 
 someFunc :: IO ()
 someFunc = putStrLn "someFunc"
 
-data LexicalValue = Number Int | Variable String deriving (Eq, Show)
+data LexicalValue = IntLit Int | Variable String deriving (Eq, Show)
 
 data Token = Open | Close | Element LexicalValue deriving (Eq, Show)
 
 lexer :: String -> LexicalValue
 lexer s
-  | all isNumber s = Number . read $ s
+  | all isNumber s = IntLit . read $ s
   | otherwise = Variable s
 
 tokenizeWord :: String -> [Token]
@@ -55,5 +56,30 @@ parse (Open : ts) =
    in Node (parse sexpr) : parse rest
 parse (Close : ts) = parse ts
 
+type Symbol = String
+
+data Type
+  = Int Int
+  | PrimitiveFn String
+  deriving (Show)
+
+type Environment = M.Map Symbol Type
+
+toHInt :: Type -> Maybe Int
+toHInt (PrimitiveFn _) = Nothing
+toHInt (Int i) = Just i
+
+fromHInt :: Int -> Type
+fromHInt = Int
+
+eval :: Environment -> Sexpr -> Type
+eval env (Node (operator : operands)) =
+  apply (eval env operator) (map (eval env) operands)
+eval env (Atom (IntLit i)) = Int i
+eval env (Atom (Variable v)) = Int 1
+
+apply :: Type -> [Type] -> Type
+apply operator operands = Int 1
+
 run :: String -> String
-run = show . parse . tokenize
+run = show . map (eval M.empty) . parse . tokenize
