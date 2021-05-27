@@ -6,17 +6,16 @@ where
 import Data.Char
 import qualified Data.Map as M
 
-someFunc :: IO ()
-someFunc = putStrLn "someFunc"
-
-data LexicalValue = IntLit Int | Variable String deriving (Eq, Show)
+-- Front-end
+  
+data LexicalValue = IntLiteral Int | Symbol String deriving (Eq, Show)
 
 data Token = Open | Close | Element LexicalValue deriving (Eq, Show)
 
 lexer :: String -> LexicalValue
 lexer s
-  | all isNumber s = IntLit . read $ s
-  | otherwise = Variable s
+  | all isNumber s = IntLiteral . read $ s
+  | otherwise = Symbol s
 
 tokenizeWord :: String -> [Token]
 tokenizeWord [] = []
@@ -56,30 +55,56 @@ parse (Open : ts) =
    in Node (parse sexpr) : parse rest
 parse (Close : ts) = parse ts
 
-type Symbol = String
+-- Backend
+
+type Variable = String
 
 data Type
-  = Int Int
-  | PrimitiveFn String
-  deriving (Show)
+  = Number Int
+  | Fn0 Type
+  | Fn1 (Type -> Type)
+  | Fn2 (Type -> Type -> Type)
+  | Fn3 (Type -> Type -> Type -> Type)
 
-type Environment = M.Map Symbol Type
+instance Show Type where
+  show (Number n) = show n
+  show (Fn0 _) = "<Fn>"
+  show (Fn1 _) = "<Fn>"
+  show (Fn2 _) = "<Fn>"
+  show (Fn3 _) = "<Fn>"
 
-toHInt :: Type -> Maybe Int
-toHInt (PrimitiveFn _) = Nothing
-toHInt (Int i) = Just i
-
-fromHInt :: Int -> Type
-fromHInt = Int
+type Environment = M.Map Variable Type
 
 eval :: Environment -> Sexpr -> Type
 eval env (Node (operator : operands)) =
   apply (eval env operator) (map (eval env) operands)
-eval env (Atom (IntLit i)) = Int i
-eval env (Atom (Variable v)) = Int 1
+eval env (Atom (IntLiteral i)) = Number i
+eval env (Atom (Symbol v)) =
+  case M.lookup v env of (Just v) -> v
+                         Nothing  -> error "Variable not found"
 
 apply :: Type -> [Type] -> Type
-apply operator operands = Int 1
+apply (Fn0 operator) _ = operator
+apply (Fn1 operator) (a:_) = operator a
+apply (Fn2 operator) (a:b:_) = operator a b
+apply (Fn3 operator) (a:b:c:_) = operator a b c
+apply a b = error $ "Tried to apply non-function type: " ++ show a
 
+-- Primitives
+
+plus :: Type -> Type -> Type
+plus (Number a) (Number b) = Number (a + b)
+plus _ _ = error "Cannot sum types other than Number"
+
+minus :: Type -> Type -> Type
+minus (Number a) (Number b) = Number (a - b)
+minus _ _ = error "Cannot subtract types other than Number"
+
+initialEnv :: Environment
+initialEnv = M.fromList
+  [("+",   Fn2 plus)
+  ,("-",   Fn2 minus)
+  ]
+  
 run :: String -> String
-run = show . map (eval M.empty) . parse . tokenize
+run = show . map (eval initialEnv) . parse . tokenize
