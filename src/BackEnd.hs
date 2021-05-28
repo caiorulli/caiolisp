@@ -33,15 +33,19 @@ eval env (Atom (IntLiteral i)) = (Number i, env)
 eval env (Atom (Symbol v)) =
   case M.lookup v env of
     (Just v) -> (v, env)
-    Nothing -> error "Variable not found"
+    Nothing -> error $ "Variable not found: " ++ show v
 
 eval env (Node [Atom (Symbol "def"), Atom (Symbol name), body]) =
   let (value, _) = eval env body
    in (value, M.insert name value env)
 
-eval env (Node [Atom (Symbol "fn"), Atom (Symbol arg), body]) =
-  let fn = \value -> fst $ eval (M.insert arg value env) body
-   in (Fn fn, env)
+eval env (Node [Atom (Symbol "fn"), Node args, body]) =
+  let fn = makeFn env args body
+   in (fn, env)
+
+eval env (Node [Atom (Symbol "defn"), Atom (Symbol name), Node args, body]) =
+  let valueFn = makeFn env args body
+   in (valueFn, M.insert name valueFn env)
 
 eval env (Node [Atom (Symbol "if"), predicate, consequent, alternative]) =
   let (result, _) = eval env predicate
@@ -53,6 +57,11 @@ eval env (Node (operator : operands)) =
       args = map (fst . eval env) operands
    in (apply fn args, env)
 
+makeFn :: Environment -> [Sexpr] -> Sexpr -> Type
+makeFn env [] body = fst $ eval env body
+makeFn env (Atom (Symbol x):args) body =
+  Fn (\value -> makeFn (M.insert x value env) args body)
+  
 apply :: Type -> [Type] -> Type
 apply = foldl next
   where

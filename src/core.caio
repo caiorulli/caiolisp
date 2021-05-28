@@ -1,5 +1,7 @@
-(def cons
-     (fn x
-         (fn y
-             (fn m
-                 (if (= m 0) x y)))))
+(defn cons
+  (x y)
+  (fn (m)
+    (if (= m 0) x y))))
+
+(defn car (z) (z 0))
+(defn cdr (z) (z 1))
