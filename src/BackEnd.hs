@@ -82,7 +82,7 @@ minus :: Type -> Type
 minus (Number a) = Fn minusA
   where
     minusA = \case
-      (Number b) -> Number (a + b)
+      (Number b) -> Number (a - b)
       _ -> error "Primitive subtraction type error"
 minus _ = error "Primitive subtraction type error"
 
