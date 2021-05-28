@@ -24,7 +24,8 @@ source-repository head
 
 library
   exposed-modules:
-      Lib
+      BackEnd
+      FrontEnd
   other-modules:
       Paths_caiolisp
   hs-source-dirs:

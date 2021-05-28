@@ -1,0 +1,5 @@
+(def cons
+     (fn x
+         (fn y
+             (fn m
+                 (if (= m 0) x y)))))
