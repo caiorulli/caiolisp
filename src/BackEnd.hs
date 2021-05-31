@@ -1,10 +1,7 @@
-{-# LANGUAGE LambdaCase #-}
-
 module BackEnd
   ( eval
-  , Type
+  , Type (..)
   , Environment
-  , initialEnv
   )
 where
 
@@ -17,12 +14,18 @@ type Variable = String
 data Type
   = Number Int
   | CLBool Bool
+  | CLChar Char
+  | Pair Type Type
+  | Nil
   | Fn (Type -> Type)
 
 instance Show Type where
   show (Number n) = show n
   show (CLBool True) = "true"
   show (CLBool False) = "false"
+  show (CLChar c) = show c
+  show (Pair a b) = "(" ++ show a ++ " . " ++ show b ++ ")" 
+  show Nil = "nil"
   show (Fn _) = "<Fn>"
 
 type Environment = M.Map Variable Type
@@ -67,37 +70,3 @@ apply = foldl next
   where
     next (Fn fn) value = fn value
     next not_a_function _ = error ("Cannot apply non-function " ++ show not_a_function)
-
--- Primitives
-
-plus :: Type -> Type
-plus (Number a) = Fn plusA
-  where
-    plusA = \case
-      (Number b) -> Number (a + b)
-      _ -> error "Primitive sum type error"
-plus _ = error "Primitive sum type error"
-
-minus :: Type -> Type
-minus (Number a) = Fn minusA
-  where
-    minusA = \case
-      (Number b) -> Number (a - b)
-      _ -> error "Primitive subtraction type error"
-minus _ = error "Primitive subtraction type error"
-
-eq :: Type -> Type
-eq (Number a) = Fn eqA
-  where
-    eqA = \case
-      (Number b) -> CLBool (a == b)
-      _ -> error "Primitive equals type error"
-eq _ = error "Primitive equals type error"
-
-initialEnv :: Environment
-initialEnv =
-  M.fromList
-    [ ("+", Fn plus)
-    , ("-", Fn minus)
-    , ("=", Fn eq) 
-    ]

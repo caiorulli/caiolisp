@@ -2,6 +2,7 @@ module Main where
 
 import FrontEnd
 import BackEnd
+import Primitives
   
 repl :: Environment -> IO ()
 repl env = do
