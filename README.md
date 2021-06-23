@@ -1,5 +1,7 @@
 # Caiolisp
 
+[![Build Status](https://cloud.drone.io/api/badges/caiorulli/caiolisp/status.svg?ref=refs/heads/deck)](https://cloud.drone.io/caiorulli/caiolisp)
+
 Let's have fun pretending I have the slightest idea of what I'm doing here
 
 ## Samples of how it currently works
