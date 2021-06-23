@@ -1,8 +1,10 @@
 module Main where
 
+import Control.Monad.State
+
 import FrontEnd
 import BackEnd
-import Primitives
+import Primitives 
   
 repl :: Environment -> IO ()
 repl env = do
@@ -12,7 +14,7 @@ repl env = do
     then return ()
     else do
       let sexpr = head . parse . tokenize $ input
-          (result, newEnv) = eval env sexpr
+          (result, newEnv) = runState (eval sexpr) env
       print result
       repl newEnv
 

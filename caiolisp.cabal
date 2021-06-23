@@ -34,6 +34,7 @@ library
   build-depends:
       base >=4.7 && <5
     , containers
+    , mtl
   default-language: Haskell2010
 
 executable caiolisp-exe
@@ -47,6 +48,7 @@ executable caiolisp-exe
       base >=4.7 && <5
     , caiolisp
     , containers
+    , mtl
   default-language: Haskell2010
 
 test-suite caiolisp-test
@@ -61,4 +63,5 @@ test-suite caiolisp-test
       base >=4.7 && <5
     , caiolisp
     , containers
+    , mtl
   default-language: Haskell2010
