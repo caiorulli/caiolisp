@@ -3,12 +3,8 @@ type: docker
 name: default
 
 steps:
-  - name: install
-    image: haskell:latest
-    commands:
-      - stack --resolver ghc-8.10.5 install
-
   - name: build
     image: haskell:latest
     commands:
+      - stack setup --resolver ghc-8.10.5
       - stack build
