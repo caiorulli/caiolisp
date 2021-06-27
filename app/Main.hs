@@ -14,7 +14,7 @@ repl env = do
     then return ()
     else do
       let sexpr = head . parse . tokenize $ input
-          (result, newEnv) = runState (eval sexpr) env
+          (result, newEnv) = runStateT (eval sexpr) env
       print result
       repl newEnv
 

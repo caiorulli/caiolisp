@@ -18,7 +18,7 @@ data Type
   | CLChar Char
   | Pair Type Type
   | Nil
-  | Fn (Type -> Type)
+  | Fn (Type -> Either String Type)
 
 instance Eq Type where
   (CLBool a) == (CLBool b) = a == b
@@ -35,8 +35,8 @@ instance Show Type where
 
 type Environment = M.Map Variable Type
 
-eval :: Sexpr -> State Environment Type
-eval (Atom (IntLiteral i)) = return (Number i)
+eval :: Sexpr -> StateT Environment (Either String) Type
+eval (Atom (IntLiteral i)) = lift . return  $ Number i
 
 eval (Atom (Symbol v)) = do
   env <- get
@@ -51,11 +51,11 @@ eval (Node [Atom (Symbol "def"), Atom (Symbol name), body]) = do
 
 eval (Node [Atom (Symbol "fn"), Node args, body]) = do
   env <- get
-  return (makeFn env args body)
+  lift $ makeFn env args body
 
 eval (Node [Atom (Symbol "defn"), Atom (Symbol name), Node args, body]) = do
   env <- get
-  let valueFn = makeFn env args body
+  valueFn <- lift $ makeFn env args body
   modify (M.insert name valueFn)
   return valueFn
 
@@ -68,16 +68,17 @@ eval (Node [Atom (Symbol "if"), predicate, consequent, alternative]) = do
 eval (Node (operator : operands)) = do
   fn <- eval operator
   args <- mapM eval operands
-  return (apply fn args)
+  lift $ apply fn args
 
-makeFn :: Environment -> [Sexpr] -> Sexpr -> Type
-makeFn env [] body = evalState (eval body) env
-makeFn env (Atom (Symbol x):args) body =
+makeFn :: Environment -> [Sexpr] -> Sexpr -> Either String Type
+makeFn env [] body = evalStateT (eval body) env
+makeFn env (Atom (Symbol x):args) body = return $
   Fn (\value -> makeFn (M.insert x value env) args body)
-makeFn _ _ _ = error "Wrong types"
+makeFn _ _ _ = Left "Wrong types"
 
-apply :: Type -> [Type] -> Type
-apply = foldl next
+apply :: Type -> [Type] -> Either String Type
+apply a = foldl next (Right a)
   where
-    next (Fn fn) value = fn value
-    next not_a_function _ = error ("Cannot apply non-function " ++ show not_a_function)
+    next (Left error) _ = Left error
+    next (Right (Fn fn)) value = fn value
+    next not_a_function _ = Left ("Cannot apply non-function " ++ show not_a_function)
