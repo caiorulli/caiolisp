@@ -36,39 +36,42 @@ instance Show Type where
 type Environment = M.Map Variable Type
 
 eval :: Sexpr -> StateT Environment (Either String) Type
-eval (Atom (IntLiteral i)) = lift . return  $ Number i
+eval sexpr = case sexpr of
+  (Atom (IntLiteral i)) -> lift . return  $ Number i
 
-eval (Atom (Symbol v)) = do
-  env <- get
-  case M.lookup v env of
-    (Just v) -> return v
-    Nothing -> error $ "Variable not found: " ++ show v
+  (Atom (Symbol v)) -> do
+    env <- get
+    case M.lookup v env of
+      (Just v) -> return v
+      Nothing -> lift . Left $ "Variable not found: " ++ show v
 
-eval (Node [Atom (Symbol "def"), Atom (Symbol name), body]) = do
-  value <- eval body
-  modify (M.insert name value)
-  return value
+  (Node [Atom (Symbol "def"), Atom (Symbol name), body]) -> do
+    value <- eval body
+    modify (M.insert name value)
+    return value
 
-eval (Node [Atom (Symbol "fn"), Node args, body]) = do
-  env <- get
-  lift $ makeFn env args body
+  (Node [Atom (Symbol "fn"), Node args, body]) -> do
+    env <- get
+    lift $ makeFn env args body
 
-eval (Node [Atom (Symbol "defn"), Atom (Symbol name), Node args, body]) = do
-  env <- get
-  valueFn <- lift $ makeFn env args body
-  modify (M.insert name valueFn)
-  return valueFn
+  (Node [Atom (Symbol "defn"), Atom (Symbol name), Node args, body]) -> do
+    env <- get
+    valueFn <- lift $ makeFn env args body
+    modify (M.insert name valueFn)
+    return valueFn
 
-eval (Node [Atom (Symbol "if"), predicate, consequent, alternative]) = do
-  result <- eval predicate
-  if result == CLBool False
-    then eval alternative
-    else eval consequent
+  (Node [Atom (Symbol "if"), predicate, consequent, alternative]) -> do
+    result <- eval predicate
+    if result == CLBool False
+      then eval alternative
+      else eval consequent
 
-eval (Node (operator : operands)) = do
-  fn <- eval operator
-  args <- mapM eval operands
-  lift $ apply fn args
+  (Node (operator : operands)) -> do
+    fn <- eval operator
+    args <- mapM eval operands
+    lift $ apply fn args
+
+  _ -> lift $ Left "Unrecognized construction"
 
 makeFn :: Environment -> [Sexpr] -> Sexpr -> Either String Type
 makeFn env [] body = evalStateT (eval body) env
@@ -79,6 +82,6 @@ makeFn _ _ _ = Left "Wrong types"
 apply :: Type -> [Type] -> Either String Type
 apply a = foldl next (Right a)
   where
-    next (Left error) _ = Left error
+    next (Left errorStr) _ = Left errorStr
     next (Right (Fn fn)) value = fn value
     next not_a_function _ = Left ("Cannot apply non-function " ++ show not_a_function)

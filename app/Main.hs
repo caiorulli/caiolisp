@@ -14,9 +14,14 @@ repl env = do
     then return ()
     else do
       let sexpr = head . parse . tokenize $ input
-          (result, newEnv) = runStateT (eval sexpr) env
-      print result
-      repl newEnv
+          result = runStateT (eval sexpr) env
+      case result of
+        Left errorStr -> do
+          putStrLn errorStr
+          repl env
+        Right (resultType, newEnv) -> do
+          print resultType
+          repl newEnv
 
 main :: IO ()
 main = do
