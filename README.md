@@ -8,7 +8,7 @@
 
 Caiolisp is a programming language I have been writing in my own time. It's mostly for study purposes. Feel free to play around with it!
 
-It is a simple Lisp based off the [Structure and Interpretation of Computer Programs](https://github.com/sarabander/sicp). The idea here is to explore the design space for functional programming using Lisp structures, first by trying to build a minimum core, then making it purely functional with your typical monad mischief, and then, who knows? Total functional programming? Dependent types? One can dream.
+It is a simple Lisp based off the [Structure and Interpretation of Computer Programs](https://github.com/sarabander/sicp) book. The idea here is to explore the design space for functional programming using Lisp structures, first by trying to build a minimum core, then making it purely functional with your typical monad mischief, and then, who knows? Total functional programming? Dependent types? One can dream.
 
 It's also an excuse to try and learn proper Haskell.
 

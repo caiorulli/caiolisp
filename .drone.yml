@@ -6,9 +6,6 @@ steps:
   - name: build
     image: haskell:9.0.1-buster
     commands:
+      - cabal update
       - cabal build
-
-  - name: test
-    image: haskell:9.0.1-buster
-    commands:
       - cabal test --test-show-details=direct --test-option=--format=progress
