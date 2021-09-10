@@ -4,11 +4,11 @@ name: default
 
 steps:
   - name: build
-    image: haskell:latest
+    image: haskell:9.0.1-buster
     commands:
       - cabal build
 
   - name: test
-    image: haskell:latest
+    image: haskell:9.0.1-buster
     commands:
       - cabal test --test-show-details=direct --test-option=--format=progress

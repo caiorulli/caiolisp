@@ -7,9 +7,18 @@ import FrontEnd
 import BackEnd
 import Primitives
 
+foldStates :: Environment -> [StateT Environment (Either String) Type]
+  -> Either String Type
+foldStates _ [] = Right Nil
+foldStates env [s] = evalStateT s env
+foldStates env (s:ss) = case result of
+  Right resultEnv -> foldStates resultEnv ss
+  Left resultErr -> Left resultErr
+  where result = execStateT s env
+
 run :: String -> Either String Type
-run expr = fmap fst result
-  where result = runStateT (eval . head . parse . tokenize $ expr) initialEnv
+run expr = foldStates initialEnv $ fmap eval sexprs
+  where sexprs = parse . tokenize $ expr
 
 main :: IO ()
 main = hspec $ do
@@ -28,3 +37,11 @@ main = hspec $ do
 
     it "Can use anonymous functions" $
       run "((fn (x) (+ x 1)) 68)" `shouldBe` Right (Number 69)
+
+    it "Can define variables" $
+      run "(def a 3) \
+          \(+ a 5)" `shouldBe` Right (Number 8)
+
+    it "Can define functions" $
+      run "(defn inc (x) (+ x 1)) \
+          \(inc 5)" `shouldBe` Right (Number 6)
