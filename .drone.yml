@@ -7,3 +7,8 @@ steps:
     image: haskell:latest
     commands:
       - cabal build
+
+  - name: test
+    image: haskell:latest
+    commands:
+      - cabal test --test-show-details=direct --test-option=--format=progress

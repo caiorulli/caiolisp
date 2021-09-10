@@ -22,6 +22,7 @@ data Type
 
 instance Eq Type where
   (CLBool a) == (CLBool b) = a == b
+  (Number a) == (Number b) = a == b
   _ == _ = False
 
 instance Show Type where
