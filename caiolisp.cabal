@@ -50,3 +50,4 @@ test-suite caiolisp-test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall
   build-depends:
       caiolisp
+    , hspec
