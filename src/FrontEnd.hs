@@ -6,16 +6,39 @@ module FrontEnd
   , tokenize)
   where
 
-import Data.Char
+import Data.Char ( isNumber )
+import qualified Text.Megaparsec.Char.Lexer as L
+import Data.Void (Void)
+import Text.Megaparsec (Parsec, between)
+import Text.Megaparsec.Char (space1, char)
+import Control.Applicative (Alternative(empty))
+import Text.ParserCombinators.ReadP (manyTill)
 
 data LexicalValue = IntLiteral Int | Symbol String deriving (Eq, Show)
 
 data Token = Open | Close | Element LexicalValue deriving (Eq, Show)
 
+type Parser = Parsec Void String
+
+sc :: Parser ()
+sc = L.space
+  space1
+  (L.skipLineComment ";;")
+  empty
+
+lexeme :: Parser a -> Parser a
+lexeme = L.lexeme sc
+
+symbol :: String -> Parser String
+symbol = L.symbol sc
+
 lexer :: String -> LexicalValue
 lexer s
   | all isNumber s = IntLiteral . read $ s
   | otherwise = Symbol s
+
+charLiteral :: Parser Char
+charLiteral = between (char '\'') (char '\'') L.charLiteral
 
 tokenizeWord :: String -> [Token]
 tokenizeWord [] = []

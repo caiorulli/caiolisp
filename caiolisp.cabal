@@ -24,6 +24,7 @@ common shared-properties
       base >=4.7 && <5
     , containers
     , mtl
+    , megaparsec
 
 library
   import: shared-properties
