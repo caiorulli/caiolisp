@@ -13,7 +13,7 @@ import FrontEnd
 type Variable = String
 
 data Type
-  = Number Int
+  = Number Integer
   | CLBool Bool
   | CLChar Char
   | Pair Type Type

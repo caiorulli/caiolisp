@@ -13,7 +13,7 @@ repl env = do
   if input == "exit"
     then return ()
     else do
-      let sexpr = head . parse . tokenize $ input
+      let sexpr = head . oparse . tokenize $ input
           result = runStateT (eval sexpr) env
       case result of
         Left errorStr -> do

@@ -1,21 +1,25 @@
 module Main (main) where
 
-import Control.Monad.State
+import Control.Monad.State ( StateT(runStateT) )
 
-import Test.Hspec
-import FrontEnd
-import BackEnd
-import Primitives
+import Test.Hspec ( shouldBe, hspec, describe, it )
+import FrontEnd ( nparser )
+import BackEnd ( eval, Environment, Type(Number, Nil) )
+import Primitives ( initialEnv )
+import Text.Megaparsec (runParser)
+
+foldFn :: (Type, Environment) -> StateT Environment (Either String) Type -> (Type, Environment)
+foldFn (_, env) st = case runStateT st env of
+  Left  _           -> (Nil, env)
+  Right (t, newEnv) -> (t, newEnv)
 
 run :: String -> Type
 run expr = fst $ foldl foldFn (Nil, initialEnv) states
   where
-    foldFn :: (Type, Environment) -> StateT Environment (Either String) Type -> (Type, Environment)
-    foldFn = \(_, env) st -> case runStateT st env of
-      Left  _           -> (Nil, env)
-      Right (t, newEnv) -> (t, newEnv)
-    states = fmap eval sexprs
-    sexprs = parse . tokenize $ expr
+    states = case sexprs of
+      Left _      -> undefined
+      Right elems -> fmap eval elems
+    sexprs = runParser nparser "test" expr
 
 main :: IO ()
 main = hspec $ do
