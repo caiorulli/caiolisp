@@ -11,8 +11,8 @@ import Data.Char ( isNumber )
 import Data.Functor (($>))
 import qualified Text.Megaparsec.Char.Lexer as L
 import Data.Void (Void)
-import Text.Megaparsec (Parsec, between, manyTill, choice, eof)
-import Text.Megaparsec.Char (space1, char)
+import Text.Megaparsec (Parsec, between, manyTill, choice, eof, try, noneOf)
+import Text.Megaparsec.Char (space1, char, alphaNumChar)
 import Control.Applicative (Alternative(empty, (<|>), many))
 import Control.Monad (void)
 
@@ -34,9 +34,11 @@ lexeme = L.lexeme sc
 symbol :: String -> Parser String
 symbol = L.symbol sc
 
+variableChar :: Parser Char
+variableChar = noneOf ['(', ')', ' ']
+
 otherSymbol :: Parser String
-otherSymbol = manyTill L.charLiteral $
-  choice [space1, eof, void openParens, void closeParens]
+otherSymbol = lexeme $ many variableChar
 
 charLiteral :: Parser Char
 charLiteral = between (char '\'') (char '\'') L.charLiteral
@@ -47,21 +49,21 @@ stringLiteral = char '\"' *> manyTill L.charLiteral (char '\"')
 integer :: Parser Integer
 integer = lexeme L.decimal
 
-openParens :: Parser Char
-openParens = lexeme $ char '('
+openParens :: Parser ()
+openParens = void $ symbol "("
 
-closeParens :: Parser Char
-closeParens = lexeme $ char ')'
+closeParens :: Parser ()
+closeParens = void $ symbol ")"
 
 element :: Parser Sexpr
 element = choice
   [ Atom . IntLiteral <$> integer
-  -- , Atom . Symbol <$> otherSymbol
-  , Node <$> (openParens *> manyTill element closeParens)
+  , Node <$> (openParens *> manyTill element (closeParens <|> eof))
+  , Atom . Symbol <$> otherSymbol
   ]
 
 nparser :: Parser [Sexpr]
-nparser = many element
+nparser = manyTill element eof
 
 -- Old parser
 

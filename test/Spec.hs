@@ -6,7 +6,7 @@ import Test.Hspec ( shouldBe, hspec, describe, it )
 import FrontEnd ( nparser )
 import BackEnd ( eval, Environment, Type(Number, Nil) )
 import Primitives ( initialEnv )
-import Text.Megaparsec (runParser)
+import Text.Megaparsec (parseMaybe)
 
 foldFn :: (Type, Environment) -> StateT Environment (Either String) Type -> (Type, Environment)
 foldFn (_, env) st = case runStateT st env of
@@ -17,9 +17,9 @@ run :: String -> Type
 run expr = fst $ foldl foldFn (Nil, initialEnv) states
   where
     states = case sexprs of
-      Left _      -> undefined
-      Right elems -> fmap eval elems
-    sexprs = runParser nparser "test" expr
+      Nothing    -> undefined
+      Just elems -> fmap eval elems
+    sexprs = parseMaybe nparser expr
 
 main :: IO ()
 main = hspec $ do
