@@ -1,25 +1,22 @@
 module Main (main) where
 
-import Control.Monad.State ( StateT(runStateT) )
-
-import Test.Hspec ( shouldBe, hspec, describe, it )
-import FrontEnd ( nparser )
-import BackEnd ( eval, Environment, Type(Number, Nil) )
-import Primitives ( initialEnv )
-import Text.Megaparsec (parseMaybe)
-
-foldFn :: (Type, Environment) -> StateT Environment (Either String) Type -> (Type, Environment)
-foldFn (_, env) st = case runStateT st env of
-  Left  _           -> (Nil, env)
-  Right (t, newEnv) -> (t, newEnv)
+import BackEnd (Type (Number), eval)
+import Control.Monad.State.Lazy (evalStateT)
+import FrontEnd (nparser)
+import Primitives (initialEnv)
+import Test.Hspec (describe, hspec, it, shouldBe)
+import Text.Megaparsec (parse)
 
 run :: String -> Type
-run expr = fst $ foldl foldFn (Nil, initialEnv) states
+run expr = case result of
+  Left _ -> undefined -- parse error
+  Right (Left _) -> undefined -- eval error
+  Right (Right []) -> undefined -- no result types
+  Right (Right ts) -> last ts
   where
-    states = case sexprs of
-      Nothing    -> undefined
-      Just elems -> fmap eval elems
-    sexprs = parseMaybe nparser expr
+    result = (`evalStateT` initialEnv) . sequence <$> states
+    states = sequence $ mapM (fmap eval) sexprs
+    sexprs = parse nparser "test" expr
 
 main :: IO ()
 main = hspec $ do
@@ -40,9 +37,13 @@ main = hspec $ do
       run "((fn (x) (+ x 1)) 68)" `shouldBe` Number 69
 
     it "Can define variables" $
-      run "(def a 3) \
-          \(+ a 5)" `shouldBe` Number 8
+      run
+        "(def a 3) \
+        \(+ a 5)"
+        `shouldBe` Number 8
 
     it "Can define functions" $
-      run "(defn inc (x) (+ x 1)) \
-          \(inc 5)" `shouldBe` Number 6
+      run
+        "(defn inc (x) (+ x 1)) \
+        \(inc 5)"
+        `shouldBe` Number 6

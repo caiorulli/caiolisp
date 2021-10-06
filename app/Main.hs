@@ -1,11 +1,11 @@
 module Main where
 
-import Control.Monad.State
-
-import FrontEnd
 import BackEnd
-import Primitives 
-  
+import Control.Monad.State
+import FrontEnd
+import Primitives
+import Text.Megaparsec (errorBundlePretty, parse)
+
 repl :: Environment -> IO ()
 repl env = do
   putStr "> "
@@ -13,15 +13,20 @@ repl env = do
   if input == "exit"
     then return ()
     else do
-      let sexpr = head . oparse . tokenize $ input
-          result = runStateT (eval sexpr) env
-      case result of
-        Left errorStr -> do
-          putStrLn errorStr
+      let parseResult = parse nparser "repl" input
+      case parseResult of
+        Left parsecErrors -> do
+          putStrLn $ errorBundlePretty parsecErrors
           repl env
-        Right (resultType, newEnv) -> do
-          print resultType
-          repl newEnv
+        Right sexprs -> do
+          let evalResult = runStateT (mapM eval sexprs) initialEnv
+          case evalResult of
+            Left s -> do
+              putStrLn s
+              repl env
+            Right (ts, newEnv) -> do
+              mapM_ print ts
+              repl newEnv
 
 main :: IO ()
 main = do

@@ -1,20 +1,18 @@
 module FrontEnd
-  ( LexicalValue (..)
-  , Token (..)
-  , Sexpr (..)
-  , oparse
-  , nparser
-  , tokenize)
-  where
+  ( LexicalValue (..),
+    Sexpr (..),
+    nparser,
+  )
+where
 
-import Data.Char ( isNumber )
-import Data.Functor (($>))
-import qualified Text.Megaparsec.Char.Lexer as L
-import Data.Void (Void)
-import Text.Megaparsec (Parsec, between, manyTill, choice, eof, try, noneOf)
-import Text.Megaparsec.Char (space1, char, alphaNumChar)
-import Control.Applicative (Alternative(empty, (<|>), many))
+import Control.Applicative (Alternative (empty, many, (<|>)))
 import Control.Monad (void)
+import Data.Char (isNumber)
+import Data.Functor (($>))
+import Data.Void (Void)
+import Text.Megaparsec (ParseErrorBundle, Parsec, between, choice, eof, manyTill, noneOf, try)
+import Text.Megaparsec.Char (alphaNumChar, char, space1)
+import qualified Text.Megaparsec.Char.Lexer as L
 
 data LexicalValue = IntLiteral Integer | Symbol String deriving (Eq, Show)
 
@@ -23,10 +21,11 @@ data Sexpr = Atom LexicalValue | Node [Sexpr] deriving (Show)
 type Parser = Parsec Void String
 
 sc :: Parser ()
-sc = L.space
-  space1
-  (L.skipLineComment ";;")
-  empty
+sc =
+  L.space
+    space1
+    (L.skipLineComment ";;")
+    empty
 
 lexeme :: Parser a -> Parser a
 lexeme = L.lexeme sc
@@ -56,56 +55,12 @@ closeParens :: Parser ()
 closeParens = void $ symbol ")"
 
 element :: Parser Sexpr
-element = choice
-  [ Atom . IntLiteral <$> integer
-  , Node <$> (openParens *> manyTill element (closeParens <|> eof))
-  , Atom . Symbol <$> otherSymbol
-  ]
+element =
+  choice
+    [ Atom . IntLiteral <$> integer,
+      Node <$> (openParens *> manyTill element (closeParens <|> eof)),
+      Atom . Symbol <$> otherSymbol
+    ]
 
 nparser :: Parser [Sexpr]
 nparser = manyTill element eof
-
--- Old parser
-
-data Token = Open | Close | Element LexicalValue deriving (Eq, Show)
-
-type Depth = Int
-
-lexer :: String -> LexicalValue
-lexer s
-  | all isNumber s = IntLiteral . read $ s
-  | otherwise = Symbol s
-
-tokenizeWord :: String -> [Token]
-tokenizeWord [] = []
-tokenizeWord s@(c : cs)
-  | c == '(' = Open : tokenizeWord cs
-  | c == ')' = Close : tokenizeWord cs
-  | otherwise =
-    let (element, rest) = break (\c -> c == '(' || c == ')') s
-     in Element (lexer element) : tokenizeWord rest
-
-tokenize :: String -> [Token]
-tokenize input =
-  let inputWords = words input
-   in concatMap tokenizeWord inputWords
-
-breakOnMatchingClose :: Depth -> [Token] -> ([Token], [Token])
-breakOnMatchingClose 0 (Close : ts) = ([], ts)
-breakOnMatchingClose depth (Open : ts) =
-  let (nextA, nextB) = breakOnMatchingClose (depth + 1) ts
-   in (Open : nextA, nextB)
-breakOnMatchingClose depth (Close : ts) =
-  let (nextA, nextB) = breakOnMatchingClose (depth - 1) ts
-   in (Close : nextA, nextB)
-breakOnMatchingClose depth (t : ts) =
-  let (nextA, nextB) = breakOnMatchingClose depth ts
-   in (t : nextA, nextB)
-
-oparse :: [Token] -> [Sexpr]
-oparse [] = []
-oparse ((Element lexVal) : ts) = Atom lexVal : oparse ts
-oparse (Open : ts) =
-  let (sexpr, rest) = breakOnMatchingClose 0 ts
-   in Node (oparse sexpr) : oparse rest
-oparse (Close : ts) = oparse ts
