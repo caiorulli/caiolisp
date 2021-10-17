@@ -15,8 +15,8 @@ repl env = do
     else do
       let parseResult = parse nparser "repl" input
       case parseResult of
-        Left parsecErrors -> do
-          putStrLn $ errorBundlePretty parsecErrors
+        Left parserErrors -> do
+          putStrLn $ errorBundlePretty parserErrors
           repl env
         Right sexprs -> do
           let evalResult = runStateT (mapM eval sexprs) initialEnv

@@ -2,6 +2,7 @@ module FrontEnd
   ( LexicalValue (..),
     Sexpr (..),
     nparser,
+    ParserErrors,
   )
 where
 
@@ -19,6 +20,7 @@ data LexicalValue = IntLiteral Integer | Symbol String deriving (Eq, Show)
 data Sexpr = Atom LexicalValue | Node [Sexpr] deriving (Show)
 
 type Parser = Parsec Void String
+type ParserErrors = ParseErrorBundle String Void
 
 sc :: Parser ()
 sc =
