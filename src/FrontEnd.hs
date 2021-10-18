@@ -1,25 +1,40 @@
 module FrontEnd
   ( LexicalValue (..),
     Sexpr (..),
-    nparser,
+    parser,
     ParserErrors,
   )
 where
 
-import Control.Applicative (Alternative (empty, many, (<|>)))
 import Control.Monad (void)
 import Data.Char (isNumber)
 import Data.Functor (($>))
 import Data.Void (Void)
-import Text.Megaparsec (ParseErrorBundle, Parsec, between, choice, eof, manyTill, noneOf, try)
-import Text.Megaparsec.Char (alphaNumChar, char, space1)
+import Text.Megaparsec
+  ( ParseErrorBundle,
+    Parsec,
+    between,
+    choice,
+    empty,
+    eof,
+    many,
+    manyTill,
+    noneOf,
+    some,
+    someTill,
+    try,
+    (<|>),
+  )
+import Text.Megaparsec.Char (alphaNumChar, char, letterChar, space1, symbolChar)
 import qualified Text.Megaparsec.Char.Lexer as L
+import Text.Megaparsec.Debug (dbg)
 
 data LexicalValue = IntLiteral Integer | Symbol String deriving (Eq, Show)
 
 data Sexpr = Atom LexicalValue | Node [Sexpr] deriving (Show)
 
 type Parser = Parsec Void String
+
 type ParserErrors = ParseErrorBundle String Void
 
 sc :: Parser ()
@@ -36,10 +51,10 @@ symbol :: String -> Parser String
 symbol = L.symbol sc
 
 variableChar :: Parser Char
-variableChar = noneOf ['(', ')', ' ']
+variableChar = letterChar <|> symbolChar <|> char '-'
 
 otherSymbol :: Parser String
-otherSymbol = lexeme $ many variableChar
+otherSymbol = lexeme $ some variableChar
 
 charLiteral :: Parser Char
 charLiteral = between (char '\'') (char '\'') L.charLiteral
@@ -56,13 +71,16 @@ openParens = void $ symbol "("
 closeParens :: Parser ()
 closeParens = void $ symbol ")"
 
+elementsList :: Parser [Sexpr]
+elementsList = openParens *> someTill element closeParens
+
 element :: Parser Sexpr
 element =
   choice
     [ Atom . IntLiteral <$> integer,
-      Node <$> (openParens *> manyTill element (closeParens <|> eof)),
-      Atom . Symbol <$> otherSymbol
+      Atom . Symbol <$> otherSymbol,
+      Node <$> elementsList
     ]
 
-nparser :: Parser [Sexpr]
-nparser = manyTill element eof
+parser :: Parser [Sexpr]
+parser = manyTill element eof

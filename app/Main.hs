@@ -13,7 +13,7 @@ repl env = do
   if input == "exit"
     then return ()
     else do
-      let parseResult = parse nparser "repl" input
+      let parseResult = parse parser "repl" input
       case parseResult of
         Left parserErrors -> do
           putStrLn $ errorBundlePretty parserErrors

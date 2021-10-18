@@ -2,9 +2,9 @@ module Main (main) where
 
 import BackEnd (Type (Number), eval)
 import Control.Monad.State.Lazy (evalStateT)
-import FrontEnd (nparser, ParserErrors)
+import FrontEnd (ParserErrors, parser)
 import Primitives (initialEnv)
-import Test.Hspec (describe, hspec, it)
+import Test.Hspec (Expectation, describe, expectationFailure, hspec, it, shouldBe)
 import Text.Megaparsec (parse)
 
 run :: String -> Either ParserErrors Type
@@ -16,12 +16,12 @@ run expr = case result of
   where
     result = (`evalStateT` initialEnv) . sequence <$> states
     states = sequence $ mapM (fmap eval) sexprs
-    sexprs = parse nparser "test" expr
+    sexprs = parse parser "test" expr
 
-shouldEval :: Either ParserErrors Type -> Type -> Bool
+shouldEval :: Either ParserErrors Type -> Type -> Expectation
 shouldEval actual expected = case actual of
-  Left _ -> False
-  Right t -> t == expected
+  Left _ -> expectationFailure "Did not parse"
+  Right t -> t `shouldBe` expected
 
 shouldFailParse :: Either ParserErrors Type -> Bool
 shouldFailParse (Left _) = True
@@ -60,3 +60,6 @@ main = hspec $ do
   describe "Errors" $ do
     it "Not closing parens should make it fail" $
       shouldFailParse $ run "(+ 0 1"
+
+    it "Not having any elements inside parens should make it fail" $
+      shouldFailParse $ run "()"
