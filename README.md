@@ -35,18 +35,18 @@ cabal test --test-show-details=direct --test-option=--format=progress
 ### Examples
 
 ```
-(+ 1 1)
-> 1
-(+ 3 (- 2 1))
-> 2
-(= 3 2)
-> false
-(if (= 2 2) 1 3)
-> 1
-(def conquest 42)
-> 42
-(defn inc (x) (+ x 1))
-> <Fn>
-(inc conquest)
-> 43
+> (+ 1 1)
+1
+> (+ 3 (- 2 1))
+2
+> (= 3 2)
+false
+> (if (= 2 2) 1 3)
+1
+> (def conquest 42)
+42
+> (defn inc (x) (+ x 1))
+<Fn>
+> (inc conquest)
+43
 ```
