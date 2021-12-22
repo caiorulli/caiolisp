@@ -7,59 +7,60 @@ module Primitives
 import qualified Data.Map as M
 
 import BackEnd
+    ( Environment, Type(CLFn, CLInt, CLPair, CLNil, CLBool) )
 
 plus :: Type -> Either String Type
-plus (Number a) = Right $ Fn plusA
+plus (CLInt a) = Right $ CLFn plusA
   where
     plusA = \case
-      (Number b) -> Right $ Number (a + b)
+      (CLInt b) -> Right $ CLInt (a + b)
       _ -> Left "Primitive sum type error"
 plus _ = Left "Primitive sum type error"
 
 minus :: Type -> Either String Type
-minus (Number a) = Right $ Fn minusA
+minus (CLInt a) = Right $ CLFn minusA
   where
     minusA = \case
-      (Number b) -> Right $ Number (a - b)
+      (CLInt b) -> Right $ CLInt (a - b)
       _ -> Left "Primitive subtraction type error"
 minus _ = Left "Primitive subtraction type error"
 
 eq :: Type -> Either String Type
-eq (Number a) = Right $ Fn eqA
+eq (CLInt a) = Right $ CLFn eqA
   where
     eqA = \case
-      (Number b) -> Right $ CLBool (a == b)
+      (CLInt b) -> Right $ CLBool (a == b)
       _ -> Left "Primitive equals type error"
 eq _ = Left "Primitive equals type error"
 
 cons :: Type -> Either String Type
-cons a = Right $ Fn (Right . Pair a)
+cons a = Right $ CLFn (Right . CLPair a)
 
 car :: Type -> Either String Type
-car (Pair a _) = Right a
+car (CLPair a _) = Right a
 car _ = Left "Primitive car type error"
 
 cdr :: Type -> Either String Type
-cdr (Pair _ b) = Right b
+cdr (CLPair _ b) = Right b
 cdr _ = Left "Primitive cdr type error"
 
 isPair :: Type -> Either String Type
-isPair (Pair _ _) = Right $ CLBool True
+isPair (CLPair _ _) = Right $ CLBool True
 isPair _ = Right $ CLBool False
 
 isNil :: Type -> Either String Type
-isNil Nil = Right $ CLBool True
+isNil CLNil = Right $ CLBool True
 isNil _ = Right $ CLBool False
 
 initialEnv :: Environment
 initialEnv =
   M.fromList
-    [ ("+", Fn plus)
-    , ("-", Fn minus)
-    , ("=", Fn eq)
-    , ("cons", Fn cons)
-    , ("car", Fn car)
-    , ("cons", Fn cons)
-    , ("isPair", Fn isPair)
-    , ("isNil", Fn isNil)
+    [ ("+", CLFn plus)
+    , ("-", CLFn minus)
+    , ("=", CLFn eq)
+    , ("cons", CLFn cons)
+    , ("car", CLFn car)
+    , ("cons", CLFn cons)
+    , ("isPair", CLFn isPair)
+    , ("isNil", CLFn isNil)
     ]

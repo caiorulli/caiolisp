@@ -6,39 +6,42 @@ module BackEnd
 where
 
 import Control.Monad.State
+    ( StateT, modify, evalStateT, MonadState(get), MonadTrans(lift) )
 import qualified Data.Map as M
 
-import FrontEnd
+import FrontEnd ( Sexpr(..), LexicalValue(Symbol, IntLiteral, NilLiteral) )
 
 type Variable = String
 
 data Type
-  = Number Integer
+  = CLInt Integer
   | CLBool Bool
   | CLChar Char
-  | Pair Type Type
-  | Nil
-  | Fn (Type -> Either String Type)
+  | CLPair Type Type
+  | CLNil
+  | CLFn (Type -> Either String Type)
 
 instance Eq Type where
   (CLBool a) == (CLBool b) = a == b
-  (Number a) == (Number b) = a == b
+  (CLInt a) == (CLInt b) = a == b
+  CLNil == CLNil = True
   _ == _ = False
 
 instance Show Type where
-  show (Number n) = show n
+  show (CLInt n) = show n
   show (CLBool True) = "true"
   show (CLBool False) = "false"
   show (CLChar c) = show c
-  show (Pair a b) = "(" ++ show a ++ " . " ++ show b ++ ")"
-  show Nil = "nil"
-  show (Fn _) = "<Fn>"
+  show (CLPair a b) = "(" ++ show a ++ " . " ++ show b ++ ")"
+  show CLNil = "nil"
+  show (CLFn _) = "<Fn>"
 
 type Environment = M.Map Variable Type
 
 eval :: Sexpr -> StateT Environment (Either String) Type
 eval sexpr = case sexpr of
-  (Atom (IntLiteral i)) -> lift . return  $ Number i
+  (Atom (IntLiteral i)) -> lift . return  $ CLInt i
+  (Atom NilLiteral) -> lift . return  $ CLNil
 
   (Atom (Symbol v)) -> do
     env <- get
@@ -77,12 +80,12 @@ eval sexpr = case sexpr of
 makeFn :: Environment -> [Sexpr] -> Sexpr -> Either String Type
 makeFn env [] body = evalStateT (eval body) env
 makeFn env (Atom (Symbol x):args) body = return $
-  Fn (\value -> makeFn (M.insert x value env) args body)
+  CLFn (\value -> makeFn (M.insert x value env) args body)
 makeFn _ _ _ = Left "Wrong types"
 
 apply :: Type -> [Type] -> Either String Type
 apply a = foldl next (Right a)
   where
     next (Left errorStr) _ = Left errorStr
-    next (Right (Fn fn)) value = fn value
+    next (Right (CLFn fn)) value = fn value
     next not_a_function _ = Left ("Cannot apply non-function " ++ show not_a_function)

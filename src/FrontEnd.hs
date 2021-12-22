@@ -29,7 +29,9 @@ import Text.Megaparsec.Char (alphaNumChar, char, letterChar, space1, symbolChar)
 import qualified Text.Megaparsec.Char.Lexer as L
 import Text.Megaparsec.Debug (dbg)
 
-data LexicalValue = IntLiteral Integer | Symbol String deriving (Eq, Show)
+data LexicalValue = IntLiteral Integer
+  | NilLiteral
+  | Symbol String deriving (Eq, Show)
 
 data Sexpr = Atom LexicalValue | Node [Sexpr] deriving (Show)
 
@@ -71,6 +73,9 @@ openParens = void $ symbol "("
 closeParens :: Parser ()
 closeParens = void $ symbol ")"
 
+nil :: Parser ()
+nil = void $ symbol "nil"
+
 elementsList :: Parser [Sexpr]
 elementsList = openParens *> someTill element closeParens
 
@@ -78,6 +83,7 @@ element :: Parser Sexpr
 element =
   choice
     [ Atom . IntLiteral <$> integer,
+      Atom NilLiteral <$ nil,
       Atom . Symbol <$> otherSymbol,
       Node <$> elementsList
     ]

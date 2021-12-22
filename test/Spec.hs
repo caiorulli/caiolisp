@@ -1,6 +1,6 @@
 module Main (main) where
 
-import BackEnd (Type (Number), eval)
+import BackEnd (Type (CLInt, CLNil), eval)
 import Control.Monad.State.Lazy (evalStateT)
 import FrontEnd (ParserErrors, parser)
 import Primitives (initialEnv)
@@ -31,31 +31,34 @@ main :: IO ()
 main = hspec $ do
   describe "Base functionality" $ do
     it "World makes sense" $
-      run "(+ 2 2)" `shouldEval` Number 4
+      run "(+ 2 2)" `shouldEval` CLInt 4
 
     it "Nested arithmetic works" $
-      run "(- (+ 30 20) 8)" `shouldEval` Number 42
+      run "(- (+ 30 20) 8)" `shouldEval` CLInt 42
 
     it "Conditional operations work: true" $
-      run "(if (= (+ 2 2) 4) 100 0)" `shouldEval` Number 100
+      run "(if (= (+ 2 2) 4) 100 0)" `shouldEval` CLInt 100
 
     it "Conditional operations work: false" $
-      run "(if (= (+ 2 2) 5) 100 0)" `shouldEval` Number 0
+      run "(if (= (+ 2 2) 5) 100 0)" `shouldEval` CLInt 0
 
     it "Can use anonymous functions" $
-      run "((fn (x) (+ x 1)) 68)" `shouldEval` Number 69
+      run "((fn (x) (+ x 1)) 68)" `shouldEval` CLInt 69
 
     it "Can define variables" $
       run
         "(def a 3) \
         \(+ a 5)"
-        `shouldEval` Number 8
+        `shouldEval` CLInt 8
 
     it "Can define functions" $
       run
         "(defn inc (x) (+ x 1)) \
         \(inc 5)"
-        `shouldEval` Number 6
+        `shouldEval` CLInt 6
+
+    it "Can use nil" $
+      run "nil" `shouldEval` CLNil
 
   describe "Errors" $ do
     it "Not closing parens should make it fail" $
