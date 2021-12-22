@@ -29,10 +29,10 @@ common shared-properties
 library
   import: shared-properties
   exposed-modules:
-      BackEnd
-      FrontEnd
-      Primitives
-      TypeSystem
+      Caiolisp.BackEnd
+      Caiolisp.FrontEnd
+      Caiolisp.Primitives
+      Caiolisp.TypeSystem
   hs-source-dirs:
       src
 

@@ -1,4 +1,4 @@
-module TypeSystem
+module Caiolisp.TypeSystem
   ( Type (..),
   )
 where

@@ -1,12 +1,12 @@
 module Main (main) where
 
-import BackEnd
+import Caiolisp.BackEnd
+import Caiolisp.FrontEnd
+import Caiolisp.Primitives
+import Caiolisp.TypeSystem
 import Control.Monad.State.Lazy
-import FrontEnd
-import Primitives
 import Test.Hspec
 import Text.Megaparsec
-import TypeSystem
 
 run :: String -> Either ParserErrors Type
 run expr = case result of

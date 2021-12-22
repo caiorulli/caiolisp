@@ -1,13 +1,13 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Primitives
+module Caiolisp.Primitives
   ( initialEnv)
   where
 
 import qualified Data.Map as M
 
-import BackEnd
-import TypeSystem
+import Caiolisp.BackEnd
+import Caiolisp.TypeSystem
 
 plus :: Type -> Either String Type
 plus (CLInt a) = Right $ CLFn plusA

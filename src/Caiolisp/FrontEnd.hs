@@ -1,4 +1,4 @@
-module FrontEnd
+module Caiolisp.FrontEnd
   ( LexicalValue (..),
     Sexpr (..),
     parser,
@@ -6,12 +6,12 @@ module FrontEnd
   )
 where
 
+import Caiolisp.TypeSystem
 import Control.Monad
 import Data.Void
 import Text.Megaparsec
 import Text.Megaparsec.Char
 import qualified Text.Megaparsec.Char.Lexer as L
-import TypeSystem
 
 data LexicalValue
   = Literal Type

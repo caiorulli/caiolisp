@@ -1,11 +1,11 @@
 module Main where
 
-import BackEnd ( eval, Environment )
-import Control.Monad.State ( MonadIO(liftIO), StateT(runStateT) )
-import FrontEnd ( parser )
-import Primitives ( initialEnv )
-import System.Console.Haskeline (InputT, defaultSettings, getInputLine, outputStrLn, runInputT)
-import Text.Megaparsec (errorBundlePretty, parse)
+import Caiolisp.BackEnd
+import Caiolisp.FrontEnd
+import Caiolisp.Primitives
+import Control.Monad.State
+import System.Console.Haskeline
+import Text.Megaparsec
 
 type Repl a = InputT IO a
 

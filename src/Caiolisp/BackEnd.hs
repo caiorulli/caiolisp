@@ -1,13 +1,13 @@
-module BackEnd
+module Caiolisp.BackEnd
   ( eval,
     Environment,
   )
 where
 
+import Caiolisp.FrontEnd
+import Caiolisp.TypeSystem
 import Control.Monad.State
 import qualified Data.Map as M
-import FrontEnd
-import TypeSystem
 
 type Variable = String
 
