@@ -1,11 +1,12 @@
 module Main (main) where
 
-import BackEnd (Type (CLInt, CLNil), eval)
-import Control.Monad.State.Lazy (evalStateT)
-import FrontEnd (ParserErrors, parser)
-import Primitives (initialEnv)
-import Test.Hspec (Expectation, describe, expectationFailure, hspec, it, shouldBe)
-import Text.Megaparsec (parse)
+import BackEnd
+import Control.Monad.State.Lazy
+import FrontEnd
+import Primitives
+import Test.Hspec
+import Text.Megaparsec
+import TypeSystem
 
 run :: String -> Either ParserErrors Type
 run expr = case result of

@@ -6,32 +6,17 @@ module FrontEnd
   )
 where
 
-import Control.Monad (void)
-import Data.Char (isNumber)
-import Data.Functor (($>))
-import Data.Void (Void)
+import Control.Monad
+import Data.Void
 import Text.Megaparsec
-  ( ParseErrorBundle,
-    Parsec,
-    between,
-    choice,
-    empty,
-    eof,
-    many,
-    manyTill,
-    noneOf,
-    some,
-    someTill,
-    try,
-    (<|>),
-  )
-import Text.Megaparsec.Char (alphaNumChar, char, letterChar, space1, symbolChar)
+import Text.Megaparsec.Char
 import qualified Text.Megaparsec.Char.Lexer as L
-import Text.Megaparsec.Debug (dbg)
+import TypeSystem
 
-data LexicalValue = IntLiteral Integer
-  | NilLiteral
-  | Symbol String deriving (Eq, Show)
+data LexicalValue
+  = Literal Type
+  | Symbol String
+  deriving (Eq, Show)
 
 data Sexpr = Atom LexicalValue | Node [Sexpr] deriving (Show)
 
@@ -82,8 +67,8 @@ elementsList = openParens *> someTill element closeParens
 element :: Parser Sexpr
 element =
   choice
-    [ Atom . IntLiteral <$> integer,
-      Atom NilLiteral <$ nil,
+    [ Atom . Literal . CLInt <$> integer,
+      Atom (Literal CLNil) <$ nil,
       Atom . Symbol <$> otherSymbol,
       Node <$> elementsList
     ]

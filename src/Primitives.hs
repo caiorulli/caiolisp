@@ -7,7 +7,7 @@ module Primitives
 import qualified Data.Map as M
 
 import BackEnd
-    ( Environment, Type(CLFn, CLInt, CLPair, CLNil, CLBool) )
+import TypeSystem
 
 plus :: Type -> Either String Type
 plus (CLInt a) = Right $ CLFn plusA

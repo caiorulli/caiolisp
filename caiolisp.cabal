@@ -32,6 +32,7 @@ library
       BackEnd
       FrontEnd
       Primitives
+      TypeSystem
   hs-source-dirs:
       src
 
