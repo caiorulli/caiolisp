@@ -1,3 +1,6 @@
 .stack-work/
 *~
 dist-newstyle/
+
+.direnv/
+result
